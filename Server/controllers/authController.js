@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const generateToken = require("../utils/generateToken");
 
 const registerUser = async (req, res) => {
   try {
@@ -27,12 +28,12 @@ const registerUser = async (req, res) => {
       password: hashedPassword
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "User registered successfully",
       userId: user._id
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -57,12 +58,13 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    res.json({
+    return res.json({
       message: "Login successful",
-      userId: user._id
+      userId: user._id,
+      token: generateToken(user._id)
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
