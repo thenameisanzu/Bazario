@@ -5,9 +5,11 @@ app.use(express.json());
 
 const testRoutes = require("./routes/testRoutes");
 const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes");
 
 app.use("/api", testRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend working");
