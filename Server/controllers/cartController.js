@@ -8,23 +8,23 @@ const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
 
-    // check product exists
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // find user's cart
     let cart = await Cart.findOne({ user: req.user._id });
 
     if (!cart) {
-      // create new cart
       cart = new Cart({
         user: req.user._id,
         items: [{ product: productId, quantity }]
       });
     } else {
-      // check if product already in cart
       const itemIndex = cart.items.findIndex(
         (item) => item.product.toString() === productId
       );
@@ -39,8 +39,28 @@ const addToCart = async (req, res) => {
     await cart.save();
     res.json(cart);
   } catch (error) {
+    console.error("ADD TO CART ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-module.exports = { addToCart };
+// @desc   Get user cart
+// @route  GET /api/cart
+// @access Private
+const getCart = async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ user: req.user._id }).populate(
+      "items.product"
+    );
+
+    if (!cart) {
+      return res.json({ items: [] });
+    }
+
+    res.json(cart);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { addToCart, getCart };
