@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+
+  const navigate = useNavigate();
 
   const loginHandler = async () => {
     setMessage("Logging in...");
@@ -24,11 +27,13 @@ function Login() {
         return;
       }
 
-      // ✅ SAVE TOKEN
+      // ✅ STEP 1A
       localStorage.setItem("token", data.token);
 
       setMessage("Login successful ✅");
-      console.log("LOGIN RESPONSE:", data);
+
+      // ✅ STEP 1B — REDIRECT
+      navigate("/products");
 
     } catch (err) {
       setMessage("Something went wrong");
