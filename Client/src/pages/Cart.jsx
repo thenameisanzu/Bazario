@@ -37,6 +37,28 @@ const getCartTotal = () => {
     0
   );
 };  
+const updateQuantity = async (productId, change) => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch("http://localhost:5003/api/cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        productId,
+        quantity: change, // +1 or -1
+      }),
+    });
+
+    const data = await res.json();
+    setCart(data); // 🔥 refresh cart state
+  } catch (err) {
+    console.error("Failed to update quantity", err);
+  }
+};
 
 return (
   <div>
@@ -54,7 +76,17 @@ return (
         >
           <p><strong>{item.product.name}</strong></p>
           <p>Price: ₹{item.product.price}</p>
-          <p>Quantity: {item.quantity}</p>
+          <div>
+  <button onClick={() => updateQuantity(item.product._id, -1)}>
+    −
+  </button>
+
+  <span style={{ margin: "0 10px" }}>{item.quantity}</span>
+
+  <button onClick={() => updateQuantity(item.product._id, 1)}>
+    +
+  </button>
+</div>
           <p>
             Subtotal: ₹{item.product.price * item.quantity}
           </p>
