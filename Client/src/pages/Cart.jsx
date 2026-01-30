@@ -29,24 +29,43 @@ function Cart() {
       });
   }, []);
 
-  return (
-    <div>
-      <h2>My Cart</h2>
+const getCartTotal = () => {
+  if (!cart) return 0;
 
-      {message && <p>{message}</p>}
-
-      {cart && cart.items.length === 0 && <p>Your cart is empty</p>}
-
-      {cart &&
-        cart.items.map((item) => (
-          <div key={item._id} style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}>
-            <p>{item.product.name}</p>
-            <p>Price: ₹{item.product.price}</p>
-            <p>Quantity: {item.quantity}</p>
-          </div>
-        ))}
-    </div>
+  return cart.items.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0
   );
+};  
+
+return (
+  <div>
+    <h2>My Cart</h2>
+
+    {message && <p>{message}</p>}
+
+    {cart && cart.items.length === 0 && <p>Your cart is empty</p>}
+
+    {cart &&
+      cart.items.map((item) => (
+        <div
+          key={item._id}
+          style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
+        >
+          <p><strong>{item.product.name}</strong></p>
+          <p>Price: ₹{item.product.price}</p>
+          <p>Quantity: {item.quantity}</p>
+          <p>
+            Subtotal: ₹{item.product.price * item.quantity}
+          </p>
+        </div>
+      ))}
+
+    {cart && cart.items.length > 0 && (
+      <h3>Total: ₹{getCartTotal()}</h3>
+    )}
+  </div>
+);
 }
 
 export default Cart;
