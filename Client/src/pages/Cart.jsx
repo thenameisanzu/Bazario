@@ -30,14 +30,14 @@ function Cart() {
   }, []);
 
 const getCartTotal = () => {
-  if (!cart) return 0;
+  if (!cart || !Array.isArray(cart.items)) return 0;
 
-  return cart.items.reduce(
-    (total, item) => total + item.product.price * item.quantity,
-    0
-  );
-};  
-const updateQuantity = async (productId, change) => {
+  return cart.items.reduce((total, item) => {
+    if (!item.product) return total;
+    return total + item.product.price * item.quantity;
+  }, 0);
+};
+  const updateQuantity = async (productId, change) => {
   const token = localStorage.getItem("token");
 
   try {
@@ -49,55 +49,71 @@ const updateQuantity = async (productId, change) => {
       },
       body: JSON.stringify({
         productId,
-        quantity: change, // +1 or -1
+        quantity: change,
       }),
     });
 
     const data = await res.json();
-    setCart(data); // 🔥 refresh cart state
+
+    // ✅ SAFETY GUARD
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    // ✅ REMOVE ZERO / NEGATIVE QUANTITY ITEMS
+    const cleanedItems = items.filter(
+      (item) => item.quantity > 0 && item.product
+    );
+
+    setCart({
+      ...data,
+      items: cleanedItems,
+    });
   } catch (err) {
     console.error("Failed to update quantity", err);
   }
 };
 
-return (
-  <div>
-    <h2>My Cart</h2>
+  return (
+    <div>
+      <h2>My Cart</h2>
 
-    {message && <p>{message}</p>}
+      {message && <p>{message}</p>}
 
-    {cart && cart.items.length === 0 && <p>Your cart is empty</p>}
+      {cart && cart.items.length === 0 && <p>Your cart is empty</p>}
 
-    {cart &&
-      cart.items.map((item) => (
-        <div
-          key={item._id}
-          style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
-        >
-          <p><strong>{item.product.name}</strong></p>
-          <p>Price: ₹{item.product.price}</p>
-          <div>
-  <button onClick={() => updateQuantity(item.product._id, -1)}>
-    −
-  </button>
+      {cart &&
+        cart.items.map((item) => (
+          <div
+            key={item._id}
+            style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
+          >
+            <p><strong>{item.product.name}</strong></p>
+            <p>Price: ₹{item.product.price}</p>
 
-  <span style={{ margin: "0 10px" }}>{item.quantity}</span>
+            <div>
+              <button onClick={() => updateQuantity(item.product._id, -1)}>
+                −
+              </button>
 
-  <button onClick={() => updateQuantity(item.product._id, 1)}>
-    +
-  </button>
-</div>
-          <p>
-            Subtotal: ₹{item.product.price * item.quantity}
-          </p>
-        </div>
-      ))}
+              <span style={{ margin: "0 10px" }}>
+                {item.quantity}
+              </span>
 
-    {cart && cart.items.length > 0 && (
-      <h3>Total: ₹{getCartTotal()}</h3>
-    )}
-  </div>
-);
+              <button onClick={() => updateQuantity(item.product._id, 1)}>
+                +
+              </button>
+            </div>
+
+            <p>
+              Subtotal: ₹{item.product.price * item.quantity}
+            </p>
+          </div>
+        ))}
+
+      {cart && cart.items.length > 0 && (
+        <h3>Total: ₹{getCartTotal()}</h3>
+      )}
+    </div>
+  );
 }
 
 export default Cart;

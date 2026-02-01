@@ -1,15 +1,17 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/product");
 
-// @desc   Add product to cart
-// @route  POST /api/cart
-// @access Private
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
 
     if (!req.user) {
       return res.status(401).json({ message: "Not authorized" });
+    }
+
+    // quantity must be +1 or -1
+    if (![1, -1].includes(quantity)) {
+      return res.status(400).json({ message: "Invalid quantity change" });
     }
 
     const product = await Product.findById(productId);
@@ -19,11 +21,16 @@ const addToCart = async (req, res) => {
 
     let cart = await Cart.findOne({ user: req.user._id });
 
+    // CREATE CART ONLY FOR +1
     if (!cart) {
-      cart = new Cart({
-        user: req.user._id,
-        items: [{ product: productId, quantity }]
-      });
+      if (quantity === 1) {
+        cart = new Cart({
+          user: req.user._id,
+          items: [{ product: productId, quantity: 1 }],
+        });
+      } else {
+        return res.json({ items: [] });
+      }
     } else {
       const itemIndex = cart.items.findIndex(
         (item) => item.product.toString() === productId
@@ -31,34 +38,47 @@ const addToCart = async (req, res) => {
 
       if (itemIndex > -1) {
         cart.items[itemIndex].quantity += quantity;
+
+        // REMOVE ITEM AT ZERO
+        if (cart.items[itemIndex].quantity === 0) {
+          cart.items.splice(itemIndex, 1);
+        }
       } else {
-        cart.items.push({ product: productId, quantity });
+        // add new item only for +1
+        if (quantity === 1) {
+          cart.items.push({ product: productId, quantity: 1 });
+        }
       }
     }
 
     await cart.save();
-    res.json(cart);
+
+    const populatedCart = await Cart.findOne({ user: req.user._id }).populate(
+      "items.product"
+    );
+
+    res.json(populatedCart);
   } catch (error) {
     console.error("ADD TO CART ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// @desc   Get user cart
-// @route  GET /api/cart
-// @access Private
 const getCart = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
     const cart = await Cart.findOne({ user: req.user._id }).populate(
       "items.product"
     );
 
-    if (!cart) {
-      return res.json({ items: [] });
-    }
+    if (!cart) return res.json({ items: [] });
 
     res.json(cart);
   } catch (error) {
+    console.error("GET CART ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
