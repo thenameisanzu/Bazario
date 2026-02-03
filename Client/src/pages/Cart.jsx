@@ -112,6 +112,10 @@ const getCartTotal = () => {
       {cart && cart.items.length > 0 && (
         <h3>Total: ₹{getCartTotal()}</h3>
       )}
+
+      {cart && cart.items.length > 0 && (
+  <button>Place Order</button>
+)}
     </div>
   );
 }
