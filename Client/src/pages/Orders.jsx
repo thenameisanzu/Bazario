@@ -45,7 +45,10 @@ function Orders() {
           <p><strong>Order ID:</strong> {order._id}</p>
           <p><strong>Total:</strong> ₹{order.totalAmount}</p>
           <p><strong>Status:</strong> {order.status}</p>
-          <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}</p>
+          <p>
+            <strong>Date:</strong>{" "}
+            {new Date(order.createdAt).toLocaleString()}
+          </p>
         </div>
       ))}
     </div>
