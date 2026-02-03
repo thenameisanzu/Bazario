@@ -14,7 +14,6 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Prepare order items
     const orderItems = cart.items.map((item) => ({
       product: item.product._id,
       quantity: item.quantity,
@@ -34,7 +33,7 @@ const createOrder = async (req, res) => {
 
     await order.save();
 
-    // ✅ Clear cart after order
+    // Clear cart
     cart.items = [];
     await cart.save();
 
@@ -45,4 +44,19 @@ const createOrder = async (req, res) => {
   }
 };
 
-module.exports = { createOrder };
+// @desc   Get user orders
+// @route  GET /api/orders
+// @access Private
+const getOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error("GET ORDERS ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { createOrder, getOrders };
