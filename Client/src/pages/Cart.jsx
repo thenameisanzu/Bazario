@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Cart() {
   const [cart, setCart] = useState(null);
   const [message, setMessage] = useState("Loading cart...");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -71,6 +73,38 @@ const getCartTotal = () => {
     console.error("Failed to update quantity", err);
   }
 };
+const handlePlaceOrder = async () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Please login first");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5003/api/orders", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Order failed");
+      return;
+    }
+
+    console.log("ORDER CREATED:", data);
+
+    // ✅ Redirect to orders page
+    navigate("/orders");
+  } catch (err) {
+    console.error("Place order failed", err);
+    alert("Something went wrong");
+  }
+};
 
   return (
     <div>
@@ -114,7 +148,9 @@ const getCartTotal = () => {
       )}
 
       {cart && cart.items.length > 0 && (
-  <button>Place Order</button>
+  <button onClick={handlePlaceOrder}>
+    Place Order
+  </button>
 )}
     </div>
   );
