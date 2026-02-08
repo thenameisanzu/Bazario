@@ -4,8 +4,11 @@ import { useNavigate } from "react-router-dom";
 function Cart() {
   const [cart, setCart] = useState(null);
   const [message, setMessage] = useState("Loading cart...");
+  const [placingOrder, setPlacingOrder] = useState(false);
+
   const navigate = useNavigate();
 
+  // Fetch cart
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -21,7 +24,6 @@ function Cart() {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log("CART DATA:", data);
         setCart(data);
         setMessage("");
       })
@@ -31,80 +33,85 @@ function Cart() {
       });
   }, []);
 
-const getCartTotal = () => {
-  if (!cart || !Array.isArray(cart.items)) return 0;
+  // Calculate total
+  const getCartTotal = () => {
+    if (!cart || !Array.isArray(cart.items)) return 0;
 
-  return cart.items.reduce((total, item) => {
-    if (!item.product) return total;
-    return total + item.product.price * item.quantity;
-  }, 0);
-};
+    return cart.items.reduce((total, item) => {
+      if (!item.product) return total;
+      return total + item.product.price * item.quantity;
+    }, 0);
+  };
+
+  // Update quantity (+ / -)
   const updateQuantity = async (productId, change) => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  try {
-    const res = await fetch("http://localhost:5003/api/cart", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        productId,
-        quantity: change,
-      }),
-    });
+    try {
+      const res = await fetch("http://localhost:5003/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId,
+          quantity: change,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    // ✅ SAFETY GUARD
-    const items = Array.isArray(data.items) ? data.items : [];
+      const items = Array.isArray(data.items) ? data.items : [];
 
-    // ✅ REMOVE ZERO / NEGATIVE QUANTITY ITEMS
-    const cleanedItems = items.filter(
-      (item) => item.quantity > 0 && item.product
-    );
+      const cleanedItems = items.filter(
+        (item) => item.quantity > 0 && item.product
+      );
 
-    setCart({
-      ...data,
-      items: cleanedItems,
-    });
-  } catch (err) {
-    console.error("Failed to update quantity", err);
-  }
-};
-const handlePlaceOrder = async () => {
-  const token = localStorage.getItem("token");
+      setCart({
+        ...data,
+        items: cleanedItems,
+      });
+    } catch (err) {
+      console.error("Failed to update quantity", err);
+    }
+  };
 
-  if (!token) {
-    alert("Please login first");
-    return;
-  }
+  // Place order (UX Step 1A)
+  const handlePlaceOrder = async () => {
+    const token = localStorage.getItem("token");
 
-  try {
-    const res = await fetch("http://localhost:5003/api/orders", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.message || "Order failed");
+    if (!token) {
+      alert("Please login first");
       return;
     }
 
-    console.log("ORDER CREATED:", data);
+    setPlacingOrder(true);
 
-    // ✅ Redirect to orders page
-    navigate("/orders");
-  } catch (err) {
-    console.error("Place order failed", err);
-    alert("Something went wrong");
-  }
-};
+    try {
+      const res = await fetch("http://localhost:5003/api/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Order failed");
+        setPlacingOrder(false);
+        return;
+      }
+
+      navigate("/orders");
+    } catch (err) {
+      console.error("Place order failed", err);
+      alert("Something went wrong");
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
 
   return (
     <div>
@@ -112,7 +119,9 @@ const handlePlaceOrder = async () => {
 
       {message && <p>{message}</p>}
 
-      {cart && cart.items.length === 0 && <p>Your cart is empty</p>}
+      {cart && cart.items.length === 0 && (
+        <p>Your cart is empty. Add some products.</p>
+      )}
 
       {cart &&
         cart.items.map((item) => (
@@ -120,7 +129,9 @@ const handlePlaceOrder = async () => {
             key={item._id}
             style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
           >
-            <p><strong>{item.product.name}</strong></p>
+            <p>
+              <strong>{item.product.name}</strong>
+            </p>
             <p>Price: ₹{item.product.price}</p>
 
             <div>
@@ -128,18 +139,14 @@ const handlePlaceOrder = async () => {
                 −
               </button>
 
-              <span style={{ margin: "0 10px" }}>
-                {item.quantity}
-              </span>
+              <span style={{ margin: "0 10px" }}>{item.quantity}</span>
 
               <button onClick={() => updateQuantity(item.product._id, 1)}>
                 +
               </button>
             </div>
 
-            <p>
-              Subtotal: ₹{item.product.price * item.quantity}
-            </p>
+            <p>Subtotal: ₹{item.product.price * item.quantity}</p>
           </div>
         ))}
 
@@ -148,10 +155,10 @@ const handlePlaceOrder = async () => {
       )}
 
       {cart && cart.items.length > 0 && (
-  <button onClick={handlePlaceOrder}>
-    Place Order
-  </button>
-)}
+        <button onClick={handlePlaceOrder} disabled={placingOrder}>
+          {placingOrder ? "Placing order..." : "Place Order"}
+        </button>
+      )}
     </div>
   );
 }
