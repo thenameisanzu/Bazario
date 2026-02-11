@@ -6,6 +6,7 @@ function Cart() {
   const [message, setMessage] = useState("Loading cart...");
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -46,37 +47,41 @@ function Cart() {
 
   // Update quantity
   const updateQuantity = async (productId, change) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    try {
-      const res = await fetch("http://localhost:5003/api/cart", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          productId,
-          quantity: change,
-        }),
-      });
+  setUpdatingItemId(productId); // 🔥 start loading for this item
 
-      const data = await res.json();
+  try {
+    const res = await fetch("http://localhost:5003/api/cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        productId,
+        quantity: change,
+      }),
+    });
 
-      const items = Array.isArray(data.items) ? data.items : [];
+    const data = await res.json();
 
-      const cleanedItems = items.filter(
-        (item) => item.quantity > 0 && item.product
-      );
+    const items = Array.isArray(data.items) ? data.items : [];
 
-      setCart({
-        ...data,
-        items: cleanedItems,
-      });
-    } catch (err) {
-      console.error("Failed to update quantity", err);
-    }
-  };
+    const cleanedItems = items.filter(
+      (item) => item.quantity > 0 && item.product
+    );
+
+    setCart({
+      ...data,
+      items: cleanedItems,
+    });
+  } catch (err) {
+    console.error("Failed to update quantity", err);
+  } finally {
+    setUpdatingItemId(null); // 🔥 stop loading
+  }
+};
 
   // Place order (UX Step 1A + 1B)
   const handlePlaceOrder = async () => {
@@ -140,15 +145,21 @@ function Cart() {
             <p>Price: ₹{item.product.price}</p>
 
             <div>
-              <button onClick={() => updateQuantity(item.product._id, -1)}>
-                −
-              </button>
+              <button
+  onClick={() => updateQuantity(item.product._id, -1)}
+  disabled={updatingItemId === item.product._id}
+>
+  −
+</button>
 
-              <span style={{ margin: "0 10px" }}>{item.quantity}</span>
+<span style={{ margin: "0 10px" }}>{item.quantity}</span>
 
-              <button onClick={() => updateQuantity(item.product._id, 1)}>
-                +
-              </button>
+<button
+  onClick={() => updateQuantity(item.product._id, 1)}
+  disabled={updatingItemId === item.product._id}
+>
+  +
+</button>
             </div>
 
             <p>Subtotal: ₹{item.product.price * item.quantity}</p>
