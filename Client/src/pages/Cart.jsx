@@ -5,6 +5,7 @@ function Cart() {
   const [cart, setCart] = useState(null);
   const [message, setMessage] = useState("Loading cart...");
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   const navigate = useNavigate();
 
@@ -43,7 +44,7 @@ function Cart() {
     }, 0);
   };
 
-  // Update quantity (+ / -)
+  // Update quantity
   const updateQuantity = async (productId, change) => {
     const token = localStorage.getItem("token");
 
@@ -77,7 +78,7 @@ function Cart() {
     }
   };
 
-  // Place order (UX Step 1A)
+  // Place order (UX Step 1A + 1B)
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("token");
 
@@ -104,11 +105,15 @@ function Cart() {
         return;
       }
 
-      navigate("/orders");
+      // ✅ UX Step 1B
+      setOrderSuccess(true);
+
+      setTimeout(() => {
+        navigate("/orders");
+      }, 1000);
     } catch (err) {
       console.error("Place order failed", err);
       alert("Something went wrong");
-    } finally {
       setPlacingOrder(false);
     }
   };
@@ -152,6 +157,12 @@ function Cart() {
 
       {cart && cart.items.length > 0 && (
         <h3>Total: ₹{getCartTotal()}</h3>
+      )}
+
+      {orderSuccess && (
+        <p style={{ color: "green" }}>
+          ✅ Order placed successfully!
+        </p>
       )}
 
       {cart && cart.items.length > 0 && (
