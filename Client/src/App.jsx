@@ -3,6 +3,7 @@ import Products from "./pages/Products";
 import Login from "./pages/Login";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
+import ProtectedRoute from "./pages/ProtectedRoute";
 
 function App() {
   return (
@@ -11,8 +12,25 @@ function App() {
 
       <Route path="/login" element={<Login />} />
       <Route path="/products" element={<Products />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/orders" element={<Orders />} />
+
+      {/* 🔐 Protected Routes */}
+      <Route
+        path="/cart"
+        element={
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
