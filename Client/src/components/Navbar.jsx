@@ -1,13 +1,43 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 function Navbar() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const [cartCount, setCartCount] = useState(0);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
+
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    setCartCount(0);
+    return;
+  }
+
+  fetch("http://localhost:5003/api/cart", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.items && Array.isArray(data.items)) {
+        const totalItems = data.items.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
+        setCartCount(totalItems);
+      }
+    })
+    .catch(() => {
+      setCartCount(0);
+    });
+}, []);
 
   return (
     <nav
@@ -33,8 +63,8 @@ function Navbar() {
         {token && (
           <>
             <Link to="/cart" style={linkStyle}>
-              Cart
-            </Link>
+  Cart ({cartCount})
+</Link>
 
             <Link to="/orders" style={linkStyle}>
               Orders
