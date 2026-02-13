@@ -4,34 +4,38 @@ import Login from "./pages/Login";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/products" />} />
+    <>
+      <Navbar />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/products" element={<Products />} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/products" />} />
 
-      {/* 🔐 Protected Routes */}
-      <Route
-        path="/cart"
-        element={
-          <ProtectedRoute>
-            <Cart />
-          </ProtectedRoute>
-        }
-      />
+        <Route path="/login" element={<Login />} />
+        <Route path="/products" element={<Products />} />
 
-      <Route
-        path="/orders"
-        element={
-          <ProtectedRoute>
-            <Orders />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </>
   );
 }
 
