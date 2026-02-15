@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { CartContext } from "../context/CartContext";
 
 function Cart() {
   const [cart, setCart] = useState(null);
@@ -8,6 +9,7 @@ function Cart() {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState(null);
 
+  const { fetchCartCount } = useContext(CartContext);
   const navigate = useNavigate();
 
   // Fetch cart
@@ -47,43 +49,46 @@ function Cart() {
 
   // Update quantity
   const updateQuantity = async (productId, change) => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    setUpdatingItemId(productId);
 
-  setUpdatingItemId(productId); // 🔥 start loading for this item
+    try {
+      const res = await fetch("http://localhost:5003/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId,
+          quantity: change,
+        }),
+      });
 
-  try {
-    const res = await fetch("http://localhost:5003/api/cart", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        productId,
-        quantity: change,
-      }),
-    });
+      const data = await res.json();
 
-    const data = await res.json();
+      const items = Array.isArray(data.items) ? data.items : [];
 
-    const items = Array.isArray(data.items) ? data.items : [];
+      const cleanedItems = items.filter(
+        (item) => item.quantity > 0 && item.product
+      );
 
-    const cleanedItems = items.filter(
-      (item) => item.quantity > 0 && item.product
-    );
+      setCart({
+        ...data,
+        items: cleanedItems,
+      });
 
-    setCart({
-      ...data,
-      items: cleanedItems,
-    });
-  } catch (err) {
-    console.error("Failed to update quantity", err);
-  } finally {
-    setUpdatingItemId(null); // 🔥 stop loading
-  }
-};
+      // 🔥 Sync Navbar cart count
+      fetchCartCount();
 
-  // Place order (UX Step 1A + 1B)
+    } catch (err) {
+      console.error("Failed to update quantity", err);
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
+  // Place order
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("token");
 
@@ -110,12 +115,15 @@ function Cart() {
         return;
       }
 
-      // ✅ UX Step 1B
+      // 🔥 Sync cart count (should reset to 0)
+      fetchCartCount();
+
       setOrderSuccess(true);
 
       setTimeout(() => {
         navigate("/orders");
       }, 1000);
+
     } catch (err) {
       console.error("Place order failed", err);
       alert("Something went wrong");
@@ -139,30 +147,32 @@ function Cart() {
             key={item._id}
             style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
           >
-            <p>
-              <strong>{item.product.name}</strong>
-            </p>
+            <p><strong>{item.product.name}</strong></p>
             <p>Price: ₹{item.product.price}</p>
 
             <div>
               <button
-  onClick={() => updateQuantity(item.product._id, -1)}
-  disabled={updatingItemId === item.product._id}
->
-  −
-</button>
+                onClick={() => updateQuantity(item.product._id, -1)}
+                disabled={updatingItemId === item.product._id}
+              >
+                −
+              </button>
 
-<span style={{ margin: "0 10px" }}>{item.quantity}</span>
+              <span style={{ margin: "0 10px" }}>
+                {item.quantity}
+              </span>
 
-<button
-  onClick={() => updateQuantity(item.product._id, 1)}
-  disabled={updatingItemId === item.product._id}
->
-  +
-</button>
+              <button
+                onClick={() => updateQuantity(item.product._id, 1)}
+                disabled={updatingItemId === item.product._id}
+              >
+                +
+              </button>
             </div>
 
-            <p>Subtotal: ₹{item.product.price * item.quantity}</p>
+            <p>
+              Subtotal: ₹{item.product.price * item.quantity}
+            </p>
           </div>
         ))}
 
