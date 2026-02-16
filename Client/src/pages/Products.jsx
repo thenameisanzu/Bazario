@@ -42,26 +42,60 @@ function Products() {
   };
 
   return (
-    <div>
-      <h2>Products</h2>
+  <div style={{ padding: "40px" }}>
+    <h2 style={{ marginBottom: "30px" }}>Products</h2>
 
-      {products.length === 0 && <p>No products found</p>}
+    {products.length === 0 && <p>No products found</p>}
 
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+        gap: "20px",
+      }}
+    >
       {products.map((product) => (
         <div
           key={product._id}
-          style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "10px",
+            padding: "20px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+            background: "#fff",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
         >
-          <h3>{product.name}</h3>
-          <p>₹{product.price}</p>
+          <div>
+            <h3 style={{ marginBottom: "10px" }}>
+              {product.name}
+            </h3>
 
-          <button onClick={() => addToCart(product._id)}>
+            <p style={{ fontWeight: "bold", marginBottom: "15px" }}>
+              ₹{product.price}
+            </p>
+          </div>
+
+          <button
+            onClick={() => addToCart(product._id)}
+            style={{
+              padding: "10px",
+              borderRadius: "6px",
+              border: "none",
+              background: "#007bff",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
             Add to Cart
           </button>
         </div>
       ))}
     </div>
-  );
+  </div>
+);
 }
 
 export default Products;
