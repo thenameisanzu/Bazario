@@ -5,6 +5,7 @@ import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import Navbar from "./components/Navbar";
+import ProductDetails from "./pages/ProductDetails";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/products/:id" element={<ProductDetails />} />
 
         <Route
           path="/orders"

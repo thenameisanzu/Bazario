@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:5003/api/products")
       .then((res) => res.json())
       .then((data) => {
-        console.log("PRODUCTS DATA:", data);
         setProducts(data);
       })
       .catch((err) => console.error("Fetch error:", err));
   }, []);
 
-  const addToCart = async (productId) => {
+  const addToCart = async (e, productId) => {
+    e.stopPropagation(); // 🔥 prevent card click navigation
+
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -42,60 +45,63 @@ function Products() {
   };
 
   return (
-  <div style={{ padding: "40px" }}>
-    <h2 style={{ marginBottom: "30px" }}>Products</h2>
+    <div style={{ padding: "40px" }}>
+      <h2 style={{ marginBottom: "30px" }}>Products</h2>
 
-    {products.length === 0 && <p>No products found</p>}
+      {products.length === 0 && <p>No products found</p>}
 
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-        gap: "20px",
-      }}
-    >
-      {products.map((product) => (
-        <div
-          key={product._id}
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-            padding: "20px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-            background: "#fff",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <h3 style={{ marginBottom: "10px" }}>
-              {product.name}
-            </h3>
-
-            <p style={{ fontWeight: "bold", marginBottom: "15px" }}>
-              ₹{product.price}
-            </p>
-          </div>
-
-          <button
-            onClick={() => addToCart(product._id)}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: "20px",
+        }}
+      >
+        {products.map((product) => (
+          <div
+            key={product._id}
+            onClick={() => navigate(`/products/${product._id}`)}
             style={{
-              padding: "10px",
-              borderRadius: "6px",
-              border: "none",
-              background: "#007bff",
-              color: "white",
               cursor: "pointer",
+              border: "1px solid #ddd",
+              borderRadius: "10px",
+              padding: "20px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+              background: "#fff",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "transform 0.2s ease",
             }}
           >
-            Add to Cart
-          </button>
-        </div>
-      ))}
+            <div>
+              <h3 style={{ marginBottom: "10px" }}>
+                {product.name}
+              </h3>
+
+              <p style={{ fontWeight: "bold", marginBottom: "15px" }}>
+                ₹{product.price}
+              </p>
+            </div>
+
+            <button
+              onClick={(e) => addToCart(e, product._id)}
+              style={{
+                padding: "10px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#007bff",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              Add to Cart
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default Products;
