@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-function Products() {
-  const [products, setProducts] = useState([]);
+function ProductDetails() {
+  const { id } = useParams();
   const navigate = useNavigate();
 
+  const [product, setProduct] = useState(null);
+  const [message, setMessage] = useState("Loading product...");
+
   useEffect(() => {
-    fetch("http://localhost:5003/api/products")
+    fetch(`http://localhost:5003/api/products/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data);
+        setProduct(data);
+        setMessage("");
       })
-      .catch((err) => console.error("Fetch error:", err));
-  }, []);
+      .catch(() => {
+        setMessage("Failed to load product");
+      });
+  }, [id]);
 
-  const addToCart = async (e, productId) => {
-    e.stopPropagation(); // 🔥 prevent card click navigation
-
+  const addToCart = async () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -32,76 +36,96 @@ function Products() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          productId,
+          productId: product._id,
           quantity: 1,
         }),
       });
 
       const data = await res.json();
       console.log("ADD TO CART RESPONSE:", data);
+      alert("Product added to cart");
     } catch (err) {
       console.error("Add to cart failed", err);
     }
   };
 
+  if (message) return <p style={{ padding: "40px" }}>{message}</p>;
+
   return (
     <div style={{ padding: "40px" }}>
-      <h2 style={{ marginBottom: "30px" }}>Products</h2>
-
-      {products.length === 0 && <p>No products found</p>}
+      <button
+        onClick={() => navigate("/products")}
+        style={{
+          marginBottom: "20px",
+          padding: "8px 12px",
+          border: "none",
+          background: "#eee",
+          cursor: "pointer",
+        }}
+      >
+        ← Back to Products
+      </button>
 
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-          gap: "20px",
+          display: "flex",
+          gap: "40px",
+          alignItems: "flex-start",
         }}
       >
-        {products.map((product) => (
-          <div
-            key={product._id}
-            onClick={() => navigate(`/products/${product._id}`)}
+        {/* Image Placeholder */}
+        <div
+          style={{
+            width: "300px",
+            height: "300px",
+            background: "#f3f3f3",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "10px",
+            fontSize: "14px",
+            color: "#777",
+          }}
+        >
+          Product Image
+        </div>
+
+        {/* Product Info */}
+        <div style={{ maxWidth: "500px" }}>
+          <h2>{product.name}</h2>
+
+          <p
             style={{
-              cursor: "pointer",
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              padding: "20px",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-              background: "#fff",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              transition: "transform 0.2s ease",
+              fontSize: "22px",
+              fontWeight: "bold",
+              margin: "10px 0",
             }}
           >
-            <div>
-              <h3 style={{ marginBottom: "10px" }}>
-                {product.name}
-              </h3>
+            ₹{product.price}
+          </p>
 
-              <p style={{ fontWeight: "bold", marginBottom: "15px" }}>
-                ₹{product.price}
-              </p>
-            </div>
+          <p style={{ marginBottom: "20px" }}>
+            {product.description || "No description available."}
+          </p>
 
-            <button
-              onClick={(e) => addToCart(e, product._id)}
-              style={{
-                padding: "10px",
-                borderRadius: "6px",
-                border: "none",
-                background: "#007bff",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
-              Add to Cart
-            </button>
-          </div>
-        ))}
+          <button
+            onClick={addToCart}
+            style={{
+              padding: "12px 20px",
+              borderRadius: "6px",
+              border: "none",
+              background: "#007bff",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+          >
+            Add to Cart
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-export default Products;
+export default ProductDetails;
