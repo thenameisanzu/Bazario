@@ -1,131 +1,70 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-function ProductDetails() {
-  const { id } = useParams();
+function Products() {
+  const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState(null);
-  const [message, setMessage] = useState("Loading product...");
-
   useEffect(() => {
-    fetch(`http://localhost:5003/api/products/${id}`)
+    fetch("http://localhost:5003/api/products")
       .then((res) => res.json())
       .then((data) => {
-        setProduct(data);
-        setMessage("");
+        console.log("PRODUCTS:", data);
+        setProducts(data);
       })
-      .catch(() => {
-        setMessage("Failed to load product");
-      });
-  }, [id]);
-
-  const addToCart = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Please login first");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost:5003/api/cart", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          productId: product._id,
-          quantity: 1,
-        }),
-      });
-
-      const data = await res.json();
-      console.log("ADD TO CART RESPONSE:", data);
-      alert("Product added to cart");
-    } catch (err) {
-      console.error("Add to cart failed", err);
-    }
-  };
-
-  if (message) return <p style={{ padding: "40px" }}>{message}</p>;
+      .catch((err) => console.error(err));
+  }, []);
 
   return (
     <div style={{ padding: "40px" }}>
-      <button
-        onClick={() => navigate("/products")}
-        style={{
-          marginBottom: "20px",
-          padding: "8px 12px",
-          border: "none",
-          background: "#eee",
-          cursor: "pointer",
-        }}
-      >
-        ← Back to Products
-      </button>
+      <h2 style={{ marginBottom: "30px" }}>Products</h2>
+
+      {products.length === 0 && <p>No products found</p>}
 
       <div
         style={{
-          display: "flex",
-          gap: "40px",
-          alignItems: "flex-start",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: "20px",
         }}
       >
-        {/* Image Placeholder */}
-        <div
-          style={{
-            width: "300px",
-            height: "300px",
-            background: "#f3f3f3",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "10px",
-            fontSize: "14px",
-            color: "#777",
-          }}
-        >
-          Product Image
-        </div>
-
-        {/* Product Info */}
-        <div style={{ maxWidth: "500px" }}>
-          <h2>{product.name}</h2>
-
-          <p
+        {products.map((product) => (
+          <div
+            key={product._id}
+            onClick={() => navigate(`/products/${product._id}`)}
             style={{
-              fontSize: "22px",
-              fontWeight: "bold",
-              margin: "10px 0",
-            }}
-          >
-            ₹{product.price}
-          </p>
-
-          <p style={{ marginBottom: "20px" }}>
-            {product.description || "No description available."}
-          </p>
-
-          <button
-            onClick={addToCart}
-            style={{
-              padding: "12px 20px",
-              borderRadius: "6px",
-              border: "none",
-              background: "#007bff",
-              color: "white",
+              border: "1px solid #ddd",
+              borderRadius: "10px",
+              padding: "15px",
+              background: "#fff",
               cursor: "pointer",
-              fontSize: "16px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
             }}
           >
-            Add to Cart
-          </button>
-        </div>
+            <img
+              src={product.image || "https://via.placeholder.com/200"}
+              alt={product.name}
+              style={{
+                width: "100%",
+                height: "180px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                marginBottom: "10px",
+              }}
+            />
+
+            <h3 style={{ marginBottom: "8px" }}>
+              {product.name}
+            </h3>
+
+            <p style={{ fontWeight: "bold" }}>
+              ₹{product.price}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-export default ProductDetails;
+export default Products;
