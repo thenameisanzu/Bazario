@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -17,34 +18,61 @@ function Products() {
   }, []);
 
   const categories = ["All", "Smartphones", "Laptops", "Accessories"];
+
+  // Category filter
   const filteredProducts =
     selectedCategory === "All"
       ? products
       : products.filter((p) => p.category === selectedCategory);
 
+  // Search filter
+  const visibleProducts = filteredProducts.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{ padding: "40px" }}>
-      <h2 style={{ marginBottom: "30px" }}>Products</h2>
-      <div style={{ marginBottom: "25px", display: "flex", gap: "10px" }}>
-  {categories.map((cat) => (
-    <button
-      key={cat}
-      onClick={() => setSelectedCategory(cat)}
-      style={{
-        padding: "8px 14px",
-        borderRadius: "6px",
-        border: "1px solid #ddd",
-        background: selectedCategory === cat ? "#0071e3" : "#fff",
-        color: selectedCategory === cat ? "#fff" : "#000",
-        cursor: "pointer",
-      }}
-    >
-      {cat}
-    </button>
-  ))}
-</div>
+      <h2 style={{ marginBottom: "20px" }}>Products</h2>
 
-      {filteredProducts.length === 0 && <p>No products found in this category</p>}
+      {/* Search bar */}
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{
+          padding: "10px",
+          width: "100%",
+          maxWidth: "400px",
+          marginBottom: "20px",
+          borderRadius: "6px",
+          border: "1px solid #ddd",
+        }}
+      />
+
+      {/* Category buttons */}
+      <div style={{ marginBottom: "25px", display: "flex", gap: "10px" }}>
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            style={{
+              padding: "8px 14px",
+              borderRadius: "6px",
+              border: "1px solid #ddd",
+              background: selectedCategory === cat ? "#0071e3" : "#fff",
+              color: selectedCategory === cat ? "#fff" : "#000",
+              cursor: "pointer",
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {visibleProducts.length === 0 && (
+        <p>No products found</p>
+      )}
 
       <div
         style={{
@@ -53,7 +81,7 @@ function Products() {
           gap: "25px",
         }}
       >
-        {filteredProducts.map((product) => (
+        {visibleProducts.map((product) => (
           <div
             key={product._id}
             onClick={() => navigate(`/products/${product._id}`)}
