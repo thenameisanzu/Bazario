@@ -6,6 +6,7 @@ function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortOption, setSortOption] = useState("default");
 
   useEffect(() => {
     fetch("http://localhost:5003/api/products")
@@ -30,6 +31,22 @@ function Products() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  let sortedProducts = [...visibleProducts];
+
+if (sortOption === "priceLow") {
+  sortedProducts.sort((a, b) => a.price - b.price);
+}
+
+if (sortOption === "priceHigh") {
+  sortedProducts.sort((a, b) => b.price - a.price);
+}
+
+if (sortOption === "newest") {
+  sortedProducts.sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+}
+
   return (
     <div style={{ padding: "40px" }}>
       <h2 style={{ marginBottom: "20px" }}>Products</h2>
@@ -49,6 +66,21 @@ function Products() {
           border: "1px solid #ddd",
         }}
       />
+      <select
+  value={sortOption}
+  onChange={(e) => setSortOption(e.target.value)}
+  style={{
+    padding: "8px",
+    marginBottom: "20px",
+    borderRadius: "6px",
+    border: "1px solid #ddd"
+  }}
+>
+  <option value="default">Sort By</option>
+  <option value="priceLow">Price: Low → High</option>
+  <option value="priceHigh">Price: High → Low</option>
+  <option value="newest">Newest</option>
+</select>
 
       {/* Category buttons */}
       <div style={{ marginBottom: "25px", display: "flex", gap: "10px" }}>
@@ -81,7 +113,7 @@ function Products() {
           gap: "25px",
         }}
       >
-        {visibleProducts.map((product) => (
+        {sortedProducts.map((product) => (
           <div
             key={product._id}
             onClick={() => navigate(`/products/${product._id}`)}
