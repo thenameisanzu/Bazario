@@ -4,9 +4,13 @@ import { useNavigate } from "react-router-dom";
 function Products() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOption, setSortOption] = useState("default");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const productsPerPage = 6;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:5003/api/products")
@@ -31,32 +35,47 @@ function Products() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Sorting
   let sortedProducts = [...visibleProducts];
 
-if (sortOption === "priceLow") {
-  sortedProducts.sort((a, b) => a.price - b.price);
-}
+  if (sortOption === "priceLow") {
+    sortedProducts.sort((a, b) => a.price - b.price);
+  }
 
-if (sortOption === "priceHigh") {
-  sortedProducts.sort((a, b) => b.price - a.price);
-}
+  if (sortOption === "priceHigh") {
+    sortedProducts.sort((a, b) => b.price - a.price);
+  }
 
-if (sortOption === "newest") {
-  sortedProducts.sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  if (sortOption === "newest") {
+    sortedProducts.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }
+
+  // Pagination
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+
+  const paginatedProducts = sortedProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
   );
-}
+
+  const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
 
   return (
     <div style={{ padding: "40px" }}>
       <h2 style={{ marginBottom: "20px" }}>Products</h2>
 
-      {/* Search bar */}
+      {/* Search */}
       <input
         type="text"
         placeholder="Search products..."
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+        }}
         style={{
           padding: "10px",
           width: "100%",
@@ -66,28 +85,34 @@ if (sortOption === "newest") {
           border: "1px solid #ddd",
         }}
       />
+
+      {/* Sort */}
       <select
-  value={sortOption}
-  onChange={(e) => setSortOption(e.target.value)}
-  style={{
-    padding: "8px",
-    marginBottom: "20px",
-    borderRadius: "6px",
-    border: "1px solid #ddd"
-  }}
->
-  <option value="default">Sort By</option>
-  <option value="priceLow">Price: Low → High</option>
-  <option value="priceHigh">Price: High → Low</option>
-  <option value="newest">Newest</option>
-</select>
+        value={sortOption}
+        onChange={(e) => setSortOption(e.target.value)}
+        style={{
+          padding: "8px",
+          marginBottom: "20px",
+          borderRadius: "6px",
+          border: "1px solid #ddd",
+          marginLeft: "10px",
+        }}
+      >
+        <option value="default">Sort By</option>
+        <option value="priceLow">Price: Low → High</option>
+        <option value="priceHigh">Price: High → Low</option>
+        <option value="newest">Newest</option>
+      </select>
 
       {/* Category buttons */}
       <div style={{ marginBottom: "25px", display: "flex", gap: "10px" }}>
         {categories.map((cat) => (
           <button
             key={cat}
-            onClick={() => setSelectedCategory(cat)}
+            onClick={() => {
+              setSelectedCategory(cat);
+              setCurrentPage(1);
+            }}
             style={{
               padding: "8px 14px",
               borderRadius: "6px",
@@ -102,10 +127,11 @@ if (sortOption === "newest") {
         ))}
       </div>
 
-      {visibleProducts.length === 0 && (
+      {paginatedProducts.length === 0 && (
         <p>No products found</p>
       )}
 
+      {/* Products grid */}
       <div
         style={{
           display: "grid",
@@ -113,7 +139,7 @@ if (sortOption === "newest") {
           gap: "25px",
         }}
       >
-        {sortedProducts.map((product) => (
+        {paginatedProducts.map((product) => (
           <div
             key={product._id}
             onClick={() => navigate(`/products/${product._id}`)}
@@ -124,7 +150,6 @@ if (sortOption === "newest") {
               background: "#fff",
               cursor: "pointer",
               boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
             }}
           >
             <img
@@ -146,6 +171,32 @@ if (sortOption === "newest") {
               ₹{product.price}
             </p>
           </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div
+        style={{
+          marginTop: "30px",
+          display: "flex",
+          gap: "10px",
+          justifyContent: "center",
+        }}
+      >
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentPage(index + 1)}
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #ddd",
+              background: currentPage === index + 1 ? "#0071e3" : "#fff",
+              color: currentPage === index + 1 ? "#fff" : "#000",
+              cursor: "pointer",
+            }}
+          >
+            {index + 1}
+          </button>
         ))}
       </div>
     </div>
