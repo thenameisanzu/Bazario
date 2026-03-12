@@ -55,7 +55,47 @@ const createProduct = async (req, res) => {
     });
 
     const createdProduct = await product.save();
+
     res.status(201).json(createdProduct);
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ⭐ ADD REVIEW
+// @desc   Add product review
+// @route  POST /api/products/:id/review
+// @access Private
+const addProductReview = async (req, res) => {
+  try {
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const { rating, comment } = req.body;
+
+    const review = {
+      user: req.user._id,
+      rating: Number(rating),
+      comment
+    };
+
+    product.reviews.push(review);
+
+    product.numReviews = product.reviews.length;
+
+    product.rating =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      product.reviews.length;
+
+    await product.save();
+
+    res.status(201).json({ message: "Review added successfully" });
+
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -64,5 +104,6 @@ const createProduct = async (req, res) => {
 module.exports = {
   getProducts,
   getProductById,
-  createProduct
+  createProduct,
+  addProductReview
 };
