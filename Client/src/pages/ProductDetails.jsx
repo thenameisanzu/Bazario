@@ -12,7 +12,7 @@ function ProductDetails() {
     fetch(`http://localhost:5003/api/products/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("PRODUCT DATA:", data); // debug
+        console.log("PRODUCT DATA:", data);
         setProduct(data);
         setLoading(false);
       })
@@ -81,6 +81,7 @@ function ProductDetails() {
           alignItems: "flex-start",
         }}
       >
+        {/* Product Image */}
         <img
           src={product.image || "https://via.placeholder.com/300"}
           alt={product.name}
@@ -92,8 +93,14 @@ function ProductDetails() {
           }}
         />
 
+        {/* Product Info */}
         <div style={{ maxWidth: "500px" }}>
           <h2>{product.name}</h2>
+
+          {/* Rating */}
+          <p style={{ marginTop: "5px" }}>
+            ⭐ {product.rating?.toFixed(1) || 0} ({product.numReviews || 0} reviews)
+          </p>
 
           <p
             style={{
@@ -124,6 +131,36 @@ function ProductDetails() {
             Add to Cart
           </button>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div style={{ marginTop: "50px", maxWidth: "700px" }}>
+        <h3>Reviews</h3>
+
+        {!product.reviews || product.reviews.length === 0 && (
+          <p>No reviews yet</p>
+        )}
+
+        {product.reviews &&
+          product.reviews.map((review) => (
+            <div
+              key={review._id}
+              style={{
+                borderBottom: "1px solid #eee",
+                padding: "15px 0",
+              }}
+            >
+              <p>
+                <strong>⭐ {review.rating}</strong>
+              </p>
+
+              <p>{review.comment}</p>
+
+              <small style={{ color: "#666" }}>
+                {new Date(review.createdAt).toLocaleDateString()}
+              </small>
+            </div>
+          ))}
       </div>
     </div>
   );
