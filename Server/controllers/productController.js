@@ -31,7 +31,7 @@ const getProductById = async (req, res) => {
 
 // @desc   Create a product
 // @route  POST /api/products
-// @access Public (admin later)
+// @access Admin
 const createProduct = async (req, res) => {
   try {
     const {
@@ -63,10 +63,63 @@ const createProduct = async (req, res) => {
   }
 };
 
+// ⭐ UPDATE PRODUCT (ADMIN)
+const updateProduct = async (req, res) => {
+  try {
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const {
+      name,
+      description,
+      price,
+      category,
+      brand,
+      image,
+      countInStock
+    } = req.body;
+
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.category = category || product.category;
+    product.brand = brand || product.brand;
+    product.image = image || product.image;
+    product.countInStock = countInStock || product.countInStock;
+
+    const updatedProduct = await product.save();
+
+    res.json(updatedProduct);
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ⭐ DELETE PRODUCT (ADMIN)
+const deleteProduct = async (req, res) => {
+  try {
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    await product.deleteOne();
+
+    res.json({ message: "Product removed" });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // ⭐ ADD REVIEW
-// @desc   Add product review
-// @route  POST /api/products/:id/review
-// @access Private
 const addProductReview = async (req, res) => {
   try {
 
@@ -78,7 +131,6 @@ const addProductReview = async (req, res) => {
 
     const { rating, comment } = req.body;
 
-    // ⭐ Prevent duplicate reviews
     const alreadyReviewed = product.reviews.find(
       (review) => review.user.toString() === req.user._id.toString()
     );
@@ -116,5 +168,7 @@ module.exports = {
   getProducts,
   getProductById,
   createProduct,
+  updateProduct,
+  deleteProduct,
   addProductReview
 };
