@@ -5,21 +5,24 @@ const {
   getProducts,
   getProductById,
   createProduct,
-  addProductReview
+  addProductReview,
+  updateProduct,
+  deleteProduct
 } = require("../controllers/productController");
 
 const { protect } = require("../middlewares/authMiddleware");
+const { admin } = require("../middlewares/adminMiddleware");
 
-// Get all products
+// Public routes
 router.get("/", getProducts);
-
-// Get single product
 router.get("/:id", getProductById);
 
-// Create product
-router.post("/", createProduct);
+// ⭐ Admin routes
+router.post("/", protect, admin, createProduct);
+router.put("/:id", protect, admin, updateProduct);
+router.delete("/:id", protect, admin, deleteProduct);
 
-// ⭐ Add review
+// ⭐ Logged in users can review
 router.post("/:id/review", protect, addProductReview);
 
 module.exports = router;
