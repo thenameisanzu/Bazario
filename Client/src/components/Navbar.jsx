@@ -10,7 +10,7 @@ function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    fetchCartCount(); // reset cart count to 0
+    fetchCartCount();
     navigate("/login");
   };
 
@@ -43,6 +43,11 @@ function Navbar() {
 
             <Link to="/orders" style={linkStyle}>
               Orders
+            </Link>
+
+            {/* Admin Link */}
+            <Link to="/admin/products" style={linkStyle}>
+              Admin
             </Link>
 
             <button onClick={handleLogout} style={buttonStyle}>

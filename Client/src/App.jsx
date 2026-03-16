@@ -6,6 +6,7 @@ import Orders from "./pages/Orders";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import ProductDetails from "./pages/ProductDetails";
+import AdminProducts from "./pages/AdminProducts";
 
 function App() {
   return (
@@ -36,6 +37,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+  path="/admin/products"
+  element={
+    <ProtectedRoute>
+      <AdminProducts />
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </>
   );
