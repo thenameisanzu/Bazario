@@ -7,6 +7,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import ProductDetails from "./pages/ProductDetails";
 import AdminProducts from "./pages/AdminProducts";
+import AdminCreateProduct from "./pages/AdminCreateProduct";
 
 function App() {
   return (
@@ -45,7 +46,17 @@ function App() {
       <AdminProducts />
     </ProtectedRoute>
   }
+/><Route
+  path="/admin/create-product"
+  element={
+    <ProtectedRoute>
+      <AdminCreateProduct />
+    </ProtectedRoute>
+  }
 />
+
+
+
       </Routes>
     </>
   );

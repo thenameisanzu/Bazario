@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function AdminProducts() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   const fetchProducts = () => {
+    setLoading(true);
+
     fetch("http://localhost:5003/api/products")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
       });
   };
 
@@ -29,7 +39,7 @@ function AdminProducts() {
       });
 
       if (res.ok) {
-        fetchProducts();
+        fetchProducts(); // refresh list
       } else {
         alert("Delete failed");
       }
@@ -42,41 +52,61 @@ function AdminProducts() {
     <div style={{ padding: "40px" }}>
       <h2>Admin Products</h2>
 
-      <table style={{ width: "100%", marginTop: "20px" }}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Category</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+      {/* ✅ Add Product Button */}
+      <button
+        onClick={() => navigate("/admin/create-product")}
+        style={{
+          marginBottom: "20px",
+          padding: "10px 15px",
+          background: "#007bff",
+          color: "white",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        + Add Product
+      </button>
 
-        <tbody>
-          {products.map((product) => (
-            <tr key={product._id}>
-              <td>{product.name}</td>
-              <td>₹{product.price}</td>
-              <td>{product.category}</td>
-
-              <td>
-                <button
-                  onClick={() => deleteProduct(product._id)}
-                  style={{
-                    background: "red",
-                    color: "white",
-                    border: "none",
-                    padding: "6px 10px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Delete
-                </button>
-              </td>
+      {/* ✅ Loading State */}
+      {loading ? (
+        <p>Loading products...</p>
+      ) : (
+        <table style={{ width: "100%", marginTop: "20px" }}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Category</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {products.map((product) => (
+              <tr key={product._id}>
+                <td>{product.name}</td>
+                <td>₹{product.price}</td>
+                <td>{product.category}</td>
+
+                <td>
+                  <button
+                    onClick={() => deleteProduct(product._id)}
+                    style={{
+                      background: "red",
+                      color: "white",
+                      border: "none",
+                      padding: "6px 10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
