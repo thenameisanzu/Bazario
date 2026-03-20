@@ -90,6 +90,19 @@ function AdminProducts() {
 
                 <td>
                   <button
+  onClick={() => navigate(`/admin/product/${product._id}/edit`)}
+  style={{
+    marginRight: "10px",
+    background: "#28a745",
+    color: "white",
+    border: "none",
+    padding: "6px 10px",
+    cursor: "pointer",
+  }}
+>
+  Edit
+</button>
+                  <button
                     onClick={() => deleteProduct(product._id)}
                     style={{
                       background: "red",

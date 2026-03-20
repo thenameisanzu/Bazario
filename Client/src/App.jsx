@@ -8,6 +8,7 @@ import Navbar from "./components/Navbar";
 import ProductDetails from "./pages/ProductDetails";
 import AdminProducts from "./pages/AdminProducts";
 import AdminCreateProduct from "./pages/AdminCreateProduct";
+import AdminEditProduct from "./pages/AdminEditProduct";
 
 function App() {
   return (
@@ -51,6 +52,15 @@ function App() {
   element={
     <ProtectedRoute>
       <AdminCreateProduct />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/product/:id/edit"
+  element={
+    <ProtectedRoute>
+      <AdminEditProduct />
     </ProtectedRoute>
   }
 />
